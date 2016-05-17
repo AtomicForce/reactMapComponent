@@ -22,11 +22,15 @@ export default class ProductMap extends React.Component {
     }
 
     changeProduct(event) {
+        var tmp = this.filterOrders(this.state.startDate, this.state.endDate, event.target.value);
+
         this.setState({
             selectedProduct: event.target.value,
-            filteredProducts: [],
+            filteredProducts: tmp,
             markers: []
         });
+
+        this.generatePins(tmp);
     }
 
     handleChangeStart(date) {
@@ -53,8 +57,7 @@ export default class ProductMap extends React.Component {
         this.generatePins(tmp);
     }
 
-    filterOrders(startDate = this.state.startDate, endDate = this.state.endDate) {
-        var self = this;
+    filterOrders(startDate = this.state.startDate, endDate = this.state.endDate, selectedProduct = this.state.selectedProduct) {
         var startDateObj = new Date(startDate.format('L'));
         var endDateObj = new Date(endDate.format('L'));
 
@@ -62,7 +65,7 @@ export default class ProductMap extends React.Component {
             var orderDate = new Date(order.purchase_date);
             orderDate.setHours(0,0,0,0);
 
-            return order.product === self.state.selectedProduct && startDateObj <= orderDate && orderDate <= endDateObj;
+            return order.product === selectedProduct && startDateObj <= orderDate && orderDate <= endDateObj;
         });
     }
 
@@ -96,33 +99,31 @@ export default class ProductMap extends React.Component {
                                 {/* Select for products */}
                                 <select onChange={this.changeProduct}>
                                     <option value=''></option>
+
                                     {(() => {
+                                        let _duplicates = [];
                                         return this.props.orders.map((order, i) => {
-                                            return <option key={i} value={order.product}>{order.product}</option>;
+                                            if (_duplicates.indexOf(order.product) <= -1) {
+                                                _duplicates.push(order.product);
+                                                return <option key={i} value={order.product}>{order.product}</option>;
+                                            }
                                         });
                                     })()}
-
                                 </select>
 
                                 {/* Date Picker */}
-                                {(() => {
-                                    if (this.state.selectedProduct) {
-                                        return (
-                                            <div>
-                                                <DatePicker
-                                                    selected={this.state.startDate}
-                                                    startDate={this.state.startDate}
-                                                    endDate={this.state.endDate}
-                                                    onChange={this.handleChangeStart} />
-                                                <DatePicker
-                                                    selected={this.state.endDate}
-                                                    startDate={this.state.startDate}
-                                                    endDate={this.state.endDate}
-                                                    onChange={this.handleChangeEnd} />
-                                            </div>
-                                        );
-                                    }
-                                })()}
+                                <div>
+                                    <DatePicker
+                                        selected={this.state.startDate}
+                                        startDate={this.state.startDate}
+                                        endDate={this.state.endDate}
+                                        onChange={this.handleChangeStart} />
+                                    <DatePicker
+                                        selected={this.state.endDate}
+                                        startDate={this.state.startDate}
+                                        endDate={this.state.endDate}
+                                        onChange={this.handleChangeEnd} />
+                                </div>
 
                                 {/* Table of filtered products */}
                                 <table>
@@ -167,8 +168,8 @@ export default class ProductMap extends React.Component {
                                             containerElement={<div style={{height: 400}} />}
                                             googleMapElement={
                                                 <GoogleMap
-                                                  defaultZoom={1}
-                                                  defaultCenter={{lat: 0, lng: 0}}
+                                                  defaultZoom={4}
+                                                  defaultCenter={{lat: 39.1850465, lng: -95.6573976}}
                                                 >
                                                 {this.state.markers.map((marker) => {
                                                     return (
